@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="redisService" class="service.RedisServiceImpl"></bean>
+    <bean id="hotBlog2Redis" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="redisService"></property>
+        <property name="targetMethod" value="setHotBlog2Redis"></property>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id= "testTaskTrigger3" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean" >
+        <property name="jobDetail" ref="hotBlog2Redis" />
+        <!-- 每一小时执行一次 -->
+        <property name="cronExpression" value="0 0 0/1 * * ?" />
+
+    </bean>
+    <!-- 实例化bean -->
+    <bean id= "testMethodQuartz" class ="service.LikedServiceImpl"/>
+
+    <!-- 配置MethodInvokingJobDetailFactoryBean -->
+    <bean id= "testTaskMethod1"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="testMethodQuartz"/>
+        <property name="targetMethod" value="transLikedCountFromRedis2DB"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+
+    <bean id= "testTaskMethod2"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="testMethodQuartz"/>
+        <property name="targetMethod" value="transLikedFromRedis2DB"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <!-- 配置定时表达式 -->
+    <bean id= "testTaskTrigger1" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean" >
+        <property name="jobDetail" ref="testTaskMethod1" />
+        <!-- 每十分钟执行一次 -->
+        <property name="cronExpression" value="0 0/10 * * * ?" />
+
+    </bean>
+    <bean id= "testTaskTrigger2" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean" >
+        <property name="jobDetail" ref="testTaskMethod2" />
+        <!-- 每十分钟执行一次 -->
+        <property name="cronExpression" value="0 0/10 * * * ?" />
+
+    </bean>
+
+    <!-- 配置调度工厂 -->
+    <bean id= "testSchedulerFactoryBean"
+          class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers" >
+            <list>
+                <ref bean="testTaskTrigger1" />
+                <ref bean="testTaskTrigger2" />
+                <ref bean="testTaskTrigger3" />
+            </list>
+        </property>
+    </bean>
+</beans>

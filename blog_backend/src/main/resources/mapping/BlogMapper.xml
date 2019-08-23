@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dao.BlogMapper">
+
+    <resultMap id="BlogLikeViewResp" type="bean.Blog">
+        <id column="blogId" property="blogId"></id>
+        <result column="like_count" property="like_count"></result>
+        <result column="view_count" property="view_count"></result>
+        <result column="title" property="title"></result>
+        <result column="content" property="content"></result>
+        <result column="blogType" property="blogType"></result>
+        <result column="tags" property="tags"></result>
+        <result column="date" property="date"></result>
+    </resultMap>
+    <!-- 目的：为dao接口方法提供sql语句配置 -->
+    <insert id="insertBlog"  parameterType="bean.Blog">
+        insert into blog (title,content,blogType,tags,date)
+        values (#{title},#{content},#{blogType},#{tags},#{date})
+        <selectKey resultType="Integer" keyProperty="blogId" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <insert id="insertAddBlog" >
+        insert into addblog(pid,bid)
+        values(#{id},#{blogId})
+    </insert>
+
+    <update id="updateInfo" parameterType="bean.Blog">
+        update blog
+        <set>
+            <if test="title!=null">title=#{title},</if>
+            <if test="content!=null">content=#{content},</if>
+            <if test="date!=null">date=#{date},</if>
+            <if test="blogType!=null">blogType=#{blogType},</if>
+            <if test="tags!=null">tags=#{tags},</if>
+            <if test="view_count!=null">view_count=#{view_count},</if>
+            <if test="like_count!=null">like_count=#{like_count}</if>
+        </set>
+        where blogId=#{blogId}
+    </update>
+    <select id="selectBlogById" resultMap="BlogLikeViewResp">
+        select *
+        from blog
+        where blogId=#{id}
+    </select>
+
+    <select id="allBlogs" resultMap="BlogLikeViewResp">
+        select *
+        from blog
+
+    </select>
+
+    <select id="getHotBlogs" resultMap="BlogLikeViewResp">
+        select *
+        from blog
+        order by view_count desc
+        limit 0,5
+    </select>
+    <select id="getBlogLike" resultType="bean.BlogLike">
+        select *
+        from user_post_like
+        where user_id=#{userId} and post_id=#{postId}
+    </select>
+
+    <insert id="saveBlogLike" parameterType="bean.BlogLike">
+        insert into user_post_like(user_id,post_id,status)
+        values (#{userId},#{postId},#{status})
+
+    </insert>
+    <update id="updateBlogLike" parameterType="bean.BlogLike">
+        update user_post_like
+        set status=#{status}
+        where id=#{id}
+    </update>
+</mapper>
